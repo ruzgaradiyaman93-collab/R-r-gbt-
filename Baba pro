@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RÜRÜGBT</title>
+<style>
+body{margin:0;background:#0b1020;color:white;font-family:Arial,sans-serif}
+header{padding:20px;background:#171f35;text-align:center;border-bottom:2px solid #7657ff}
+header h1{margin:0;color:#a99aff}
+header p{color:#b9c4d9}
+#chat{padding:16px;max-width:700px;margin:auto;height:55vh;overflow:auto}
+.msg{padding:12px 15px;margin:10px 0;border-radius:15px;white-space:pre-wrap;line-height:1.5}
+.user{background:#5842bd;margin-left:15%;text-align:right}
+.bot{background:#19243a;margin-right:15%}
+.controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:10px}
+button{background:#7657ff;color:white;border:0;border-radius:12px;padding:12px;cursor:pointer}
+.entry{display:flex;gap:8px;padding:12px;max-width:700px;margin:auto}
+textarea{flex:1;min-width:0;background:#19243a;color:white;border:1px solid #384662;border-radius:12px;padding:12px;font-size:16px}
+small{color:#aab7ce}
+</style>
+</head>
+<body>
+<header>
+<h1>✦ RÜRÜGBT</h1>
+<p>Rüzgar'ın Türkçe asistanı</p>
+</header>
+<div id="chat">
+<div class="msg bot">Selam! Ben RÜRÜGBT 🤖<br>Benimle yazışabilir veya sesli cevapları açabilirsin!</div>
+</div>
+<div class="controls">
+<button onclick="startVoice()">🎙️ Sesle yaz</button>
+<button onclick="toggleSpeech()">🔊 Sesli cevap: Aç/Kapat</button>
+<button onclick="stopSpeech()">⏹ Sesi durdur</button>
+<button onclick="clearChat()">↻ Yeni sohbet</button>
+</div>
+<div class="entry">
+<textarea id="message" rows="2" placeholder="RÜRÜGBT'ye mesaj yaz..."></textarea>
+<button onclick="sendMessage()">Gönder ➤</button>
+</div>
+<div style="text-align:center;padding:12px"><small>Ücretsiz demo • Ses özellikleri tarayıcı desteğine bağlıdır.</small></div>
+<script>
+let voiceOn=false;
+let lastAnswer="";
+
+function addMessage(text,who){
+  const chat=document.getElementById("chat");
+  const div=document.createElement("div");
+  div.className="msg "+who;
+  div.textContent=text;
+  chat.appendChild(div);
+  chat.scrollTop=chat.scrollHeight;
+}
+function getAnswer(q){
+  const s=q.toLocaleLowerCase("tr-TR");
+
+  if(s.includes("kim seni yaptı") || s.includes("seni kim yaptı") || s.includes("kim yaptı") || s.includes("yaratıcın")){
+    return "Beni Rüzgar Adıyaman yaptı! 🤖 RÜRÜGBT projesinin hikâyesi 2016 yılında başlıyor.";
+  }
+  if(s.includes("kaç yaş") || s.includes("ne zaman doğdun") || s.includes("doğum yıl")){
+    return "RÜRÜGBT'nin hikâyesinde 2016 doğum yılı olarak belirlenmiştir. 🎂";
+  }
+  if(s.includes("18 ekim") || s.includes("ne zaman yapıldın")){
+    return "RÜRÜGBT'nin hikâyesindeki yapılış tarihi 18 Ekim 2026 olarak belirlenmiştir.";
+  }
+  if(s.includes("merhaba") || s.includes("selam")){
+    return "Selam! 😎 Ben RÜRÜGBT. Sana nasıl yardımcı olabilirim?";
+  }
+  if(s.includes("kaç") && s.includes("2")){
+    return "Hangi işlemi sorduğunu yazarsan yardımcı olayım!";
+  }
+  const match=s.match(/(-?\d+)\s*([+\-*x×/])\s*(-?\d+)/);
+  if(match){
+    const a=Number(match[1]),b=Number(match[3]),op=match[2];
+    const result=op==="+"?a+b:op==="-"?a-b:(op==="*"||op==="x"||op==="×")?a*b:a/b;
+    return "Sonuç: "+result;
+  }
+  if(s.includes("oyun")){
+    return "Bir oyun fikri: Rüzgâr Adası! 🌍 Görevleri tamamla, araçlar geliştir ve yeni bölgeler keşfet.";
+  }
+  if(s.includes("sesli")){
+    return "Sesle yazmak için mikrofon düğmesini, cevaplarımı duymak için sesli cevap düğmesini kullan.";
+  }
+  return "Mesajını aldım! Şu an temel demo modundayım. Matematik işlemleri, RÜRÜGBT'nin hikâyesi ve bazı basit sorularda yardımcı olabilirim. Gerçek, genel amaçlı yapay zekâ sohbeti için ayrıca güvenli bir sunucu bağlantısı gerekir.";
+}
+function sendMessage(){
+  const box=document.getElementById("message");
+  const q=box.value.trim();
+  if(!q)return;
+  box.value="";
+  addMessage(q,"user");
+  lastAnswer=getAnswer(q);
+  setTimeout(()=>{
+    addMessage(lastAnswer,"bot");
+    if(voiceOn)speak(lastAnswer);
+  },200);
+}
+function speak(text){
+  if(!("speechSynthesis" in window)){
+    alert("Tarayıcın sesli okumayı desteklemiyor.");
+    return;
+  }
+  speechSynthesis.cancel();
+  const utterance=new SpeechSynthesisUtterance(text);
+  utterance.lang="tr-TR";
+  speechSynthesis.speak(utterance);
+}
+function toggleSpeech(){
+  voiceOn=!voiceOn;
+  if(voiceOn && lastAnswer)speak(lastAnswer);
+  alert(voiceOn?"Sesli cevap açıldı!":"Sesli cevap kapatıldı.");
+}
+function stopSpeech(){
+  if("speechSynthesis" in window)speechSynthesis.cancel();
+}
+function startVoice(){
+  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!Recognition){
+    alert("Bu tarayıcı sesle yazmayı desteklemiyor. Chrome'da deneyebilirsin.");
+    return;
+  }
+  const rec=new Recognition();
+  rec.lang="tr-TR";
+  rec.onresult=e=>{
+    document.getElementById("message").value=e.results[0][0].transcript;
+  };
+  rec.onerror=()=>alert("Mikrofon iznini kontrol et.");
+  rec.start();
+}
+function clearChat(){
+  stopSpeech();
+  document.getElementById("chat").innerHTML="";
+  addMessage("Yeni sohbet başladı! Ben RÜRÜGBT. 😊","bot");
+}
+document.getElementById("message").addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+</script>
+</body>
+</html>
